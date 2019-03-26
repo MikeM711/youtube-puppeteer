@@ -14,7 +14,7 @@ debugger;
     // Create a new page in the browser - have a page object
     const page = await browser.newPage();
 
-    await page.setViewport({ width: 1280, height: 800 });
+    // await page.setViewport({ width: 1280, height: 800 });
 
 
     /* This Multi-comment section deals with scraping youtube channels of their videos, and doing stuff with it
@@ -84,7 +84,7 @@ debugger;
 
     // Go to a video with a lot of comments, use scroll function
 
-    await page.goto('https://www.youtube.com/watch?v=QVA33KFZhUo');
+    await page.goto('https://www.youtube.com/watch?v=Ce-l9VpZn84');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
@@ -140,7 +140,37 @@ debugger;
     }
 
     // Scroll all the way down
-    await scrollFunc()
+
+    //paper-spinner#spinner
+
+    let active = true
+    
+      while(active){
+        await scrollFunc()
+        let buffer = await page.$('yt-next-continuation.ytd-item-section-renderer')
+        // buffer = page.$('paper-spinner#spinner')
+
+        if(!buffer){
+          console.log("cant see buffer")
+          active = false
+        }
+
+        // try {
+        //   await page.waitForSelector('yt-next-continuation.ytd-item-section-renderer')
+        //   console.log('we still have: "yt-next-continuation.ytd-item-section-renderer"')
+        // } catch (error) {
+        //   console.log('No more "yt-next-continuation.ytd-item-section-renderer". Break')
+        //   buffer = false
+        // } 
+
+      }
+    
+      console.log('out of while loop')
+    
+
+
+    // await page.$('yt-visibility-monitor#visibility-monitor')
+
 
     await console.log('scroll completed?')
 
