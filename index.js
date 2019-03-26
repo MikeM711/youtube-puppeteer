@@ -81,10 +81,13 @@ debugger;
     End of multi-line comment
     */
 
+    // Controversial videos, like politics, tend to have a lot of "show more replies"
+    // https://www.youtube.com/watch?v=U1_ZvIVQHuI
 
     // Go to a video with a lot of comments, use scroll function
+    // Here's a nature video: https://www.youtube.com/watch?v=Ce-l9VpZn84
 
-    await page.goto('https://www.youtube.com/watch?v=Ce-l9VpZn84');
+    await page.goto('https://www.youtube.com/watch?v=U1_ZvIVQHuI');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
@@ -121,7 +124,7 @@ debugger;
             let lastScroll = 0;
 
             const interval = setInterval(() => {
-              window.scrollBy(0, 100); //scroll amount
+              window.scrollBy(0, 1000); //scroll amount
               const scrollTop = document.documentElement.scrollTop;
               if (scrollTop === maxScroll || scrollTop === lastScroll) {
                 clearInterval(interval);
@@ -141,36 +144,54 @@ debugger;
 
     // Scroll all the way down
 
-    //paper-spinner#spinner
+    console.log('scrolling...')
 
     let active = true
-    
-      while(active){
-        await scrollFunc()
-        let buffer = await page.$('yt-next-continuation.ytd-item-section-renderer')
-        // buffer = page.$('paper-spinner#spinner')
 
-        if(!buffer){
-          console.log("cant see buffer")
-          active = false
-        }
+    while (active) {
+      await scrollFunc()
 
-        // try {
-        //   await page.waitForSelector('yt-next-continuation.ytd-item-section-renderer')
-        //   console.log('we still have: "yt-next-continuation.ytd-item-section-renderer"')
-        // } catch (error) {
-        //   console.log('No more "yt-next-continuation.ytd-item-section-renderer". Break')
-        //   buffer = false
-        // } 
+      // below will gather a new $('context') at each iteration, and test to see if visible or not
+      let buffer = await page.$('yt-next-continuation.ytd-item-section-renderer')
 
+      if (!buffer) {
+        console.log("no more 'continuation' tags")
+        active = false
       }
-    
-      console.log('out of while loop')
-    
 
+    }
 
-    // await page.$('yt-visibility-monitor#visibility-monitor')
+    console.log('out of while loop')
 
+    // all currently visible reply buttons
+    let showMorebtns = await page.$$('div.more-button')
+
+    console.log('clicking buttons')
+
+    // iterate thru all visible reply buttons if they exist
+    if (showMorebtns) {
+      for (let i = 0; i < showMorebtns.length; i++) {
+        // don't click so fast...
+        await showMorebtns[i].click()
+        //await page.waitForNavigation({ waitUntil: 'networkidle1' })
+        await delay(300);
+        console.log(`${i + 1} " out of " ${showMorebtns.length} "comments"`)
+      }
+    }
+
+    // all currently visible "Show more replies" buttons
+    let showMoreRep = await page.$$('paper-button.yt-next-continuation')
+
+    console.log('clicking "Show more replies"')
+    // iterate thru all visible "Show more replies" buttons
+    if (showMoreRep) {
+      for (let i = 0; i < showMoreRep.length; i++) {
+        // don't click so fast...
+        await showMoreRep[i].click()
+        await delay(300);
+        console.log(`${i + 1} " out of " ${showMoreRep.length} "comments"`)
+      }
+    }
 
     await console.log('scroll completed?')
 
