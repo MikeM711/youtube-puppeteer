@@ -87,12 +87,11 @@ debugger;
     // Go to a video with a lot of comments, use scroll function
     // Here's a nature video: https://www.youtube.com/watch?v=Ce-l9VpZn84
 
+    // large video test: https://www.youtube.com/watch?v=th5QV1mnWXo
     await page.goto('https://www.youtube.com/watch?v=U1_ZvIVQHuI');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
-
-    
 
     await console.log('video is in view!')
     // yt-visibility-monitor id="visibility-monitor"
@@ -165,104 +164,34 @@ debugger;
 
     console.log('out of while loop')
 
-    // The "context" of "View # replies" is in the below selector
+    // The "context" of all "View # replies" buttons in the below selector, a long rectangle 'div-like' selector - AKA expander
     let expander = await page.$$('ytd-expander.ytd-comment-replies-renderer')
 
     console.log('clicking buttons')
 
-    async function buttonClick(showMore) {
-
-      new Promise((resolve, reject) => {
-        try {
-          showMore.click()
-
-          let spinner = page.$$('paper-spinner:active')
-
-          // undefined... WHY???????
-          // What selectors come in when the paper-spinner is running?
-          // BTW, nothing gets clicked until all promises are complete...
-          console.log('spinner length', spinner.length)
-
-          console.log('test')
-
-          resolve()
-        }
-        catch (err) {
-          console.log(err);
-          reject(err.toString());
-        }
-      })
-    }
-
-    // 'paper-spinner:active'
-    async function waitForHidden(context){
-
-      new Promise((resolve, reject) => {
-        try {
-          let active = true
-          while(active){
-
-            let spinner = page.$$('paper-spinner:active')
-            console.log(spinner.length)
-            if(!spinner.length || spinner.length ==0){
-              active = false
-            }
-
-          }
-          resolve()
-        }
-        catch (err) {
-          console.log(err);
-          reject(err.toString());
-        }
-      })
-    }
-
-    // iterate thru all visible reply buttons if they exist
-    // GOAL: don't click so fast... may need promises to help
+    // iterate thru all visible reply buttons
     if (expander) {
       for (let i = 0; i < expander.length; i++) {
 
-        // inside the expander context, there's a button in the below selector
+        // inside the expander context, there's a "View # replies" button in the below selector
         let showMore = await expander[i].$('div.more-button')
 
-        // click that button
-        //await buttonClick(showMore)
+        // click that "View # replies" button
         await showMore.click()
 
-        //await waitForHidden(expander[i])
+        // how many replies are found after we click the particular "View # replies" button?
+        let clickedReplies = await expander[i].$$('ytd-comment-renderer.ytd-comment-replies-renderer')
+        // console.log(clickedReplies.length) - I return 0 almost all of the time
 
-        // div#spinnerContainer.active
+        /* Note: If we click too many, too fast - the program will mis-click
+          To slow the program down, we will keep the exeuction in a while-loop until a reply renders out */
+        while(clickedReplies == 0){
+          clickedReplies = await expander[i].$$('ytd-comment-renderer.ytd-comment-replies-renderer')
+        }
 
-
-        // let active = true
-
-        // while (active) {
-    
-        //   // below will gather a new $('context') at each iteration, and test to see if visible or not
-        //   let spinner = await page.$$('div#spinnerContainer.active')
-    
-        //   if (spinner.length == 1) {
-        //     console.log("no more 'div#spinnerContainer.active' tags")
-        //     active = false
-        //   }
-    
-        // }
-
-        //
-        //*[@id="loaded-replies"]/ytd-comment-renderer[1]
-
-        let spinner = page.$$('#loaded-replies > ytd-comment-renderer:nth-child(1)')
-        let xpath = page.$$('[@id="loaded-replies"]/ytd-comment-renderer[1]')
-
-        console.log(spinner.length)
-        console.log(xpath.length)
+        // replies have been rendered out, execution will continue
         
-
-
         await console.log('spinner disappeared')
-
-
 
         await console.log(`${i + 1} " out of " ${expander.length} "comments"`)
       }
