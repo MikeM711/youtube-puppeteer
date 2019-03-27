@@ -103,7 +103,7 @@ debugger;
     }
 
     // time to let the video render
-    await delay(1000);
+    await delay(1500);
 
     // Get the video element
     const videoBtn = await page.$('video.video-stream')
@@ -163,19 +163,31 @@ debugger;
 
     console.log('out of while loop')
 
-    // all currently visible reply buttons
-    let showMorebtns = await page.$$('div.more-button')
+    // The "context" of "View # replies" is in the below selector
+    let expander = await page.$$('ytd-expander.ytd-comment-replies-renderer')
 
     console.log('clicking buttons')
 
     // iterate thru all visible reply buttons if they exist
-    if (showMorebtns) {
-      for (let i = 0; i < showMorebtns.length; i++) {
-        // don't click so fast...
-        await showMorebtns[i].click()
-        //await page.waitForNavigation({ waitUntil: 'networkidle1' })
-        await delay(300);
-        console.log(`${i + 1} " out of " ${showMorebtns.length} "comments"`)
+    // GOAL: don't click so fast... may need promises to help
+    if (expander) {
+      for (let i = 0; i < expander.length; i++) {
+
+        // inside the expander context, there's a button in the below selector
+        let showMore = await expander[i].$('div.more-button')
+
+        // click that button
+        await showMore.click()
+
+        // HOPEFULLY, waiting for the below selecto will gives us more time
+        // let paper = await expander[i].$$('paper-ripple.paper-button')
+
+        //paper-spinner#spinner
+
+        await page.waitForSelector('#spinner', { hidden: true });
+        
+
+        console.log(`${i + 1} " out of " ${expander.length} "comments"`)
       }
     }
 
