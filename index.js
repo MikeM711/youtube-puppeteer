@@ -92,6 +92,8 @@ debugger;
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
 
+    
+
     await console.log('video is in view!')
     // yt-visibility-monitor id="visibility-monitor"
 
@@ -168,6 +170,54 @@ debugger;
 
     console.log('clicking buttons')
 
+    async function buttonClick(showMore) {
+
+      new Promise((resolve, reject) => {
+        try {
+          showMore.click()
+
+          let spinner = page.$$('paper-spinner:active')
+
+          // undefined... WHY???????
+          // What selectors come in when the paper-spinner is running?
+          // BTW, nothing gets clicked until all promises are complete...
+          console.log('spinner length', spinner.length)
+
+          console.log('test')
+
+          resolve()
+        }
+        catch (err) {
+          console.log(err);
+          reject(err.toString());
+        }
+      })
+    }
+
+    // 'paper-spinner:active'
+    async function waitForHidden(context){
+
+      new Promise((resolve, reject) => {
+        try {
+          let active = true
+          while(active){
+
+            let spinner = page.$$('paper-spinner:active')
+            console.log(spinner.length)
+            if(!spinner.length || spinner.length ==0){
+              active = false
+            }
+
+          }
+          resolve()
+        }
+        catch (err) {
+          console.log(err);
+          reject(err.toString());
+        }
+      })
+    }
+
     // iterate thru all visible reply buttons if they exist
     // GOAL: don't click so fast... may need promises to help
     if (expander) {
@@ -177,17 +227,44 @@ debugger;
         let showMore = await expander[i].$('div.more-button')
 
         // click that button
+        //await buttonClick(showMore)
         await showMore.click()
 
-        // HOPEFULLY, waiting for the below selecto will gives us more time
-        // let paper = await expander[i].$$('paper-ripple.paper-button')
+        //await waitForHidden(expander[i])
 
-        //paper-spinner#spinner
+        // div#spinnerContainer.active
 
-        await page.waitForSelector('#spinner', { hidden: true });
+
+        // let active = true
+
+        // while (active) {
+    
+        //   // below will gather a new $('context') at each iteration, and test to see if visible or not
+        //   let spinner = await page.$$('div#spinnerContainer.active')
+    
+        //   if (spinner.length == 1) {
+        //     console.log("no more 'div#spinnerContainer.active' tags")
+        //     active = false
+        //   }
+    
+        // }
+
+        //
+        //*[@id="loaded-replies"]/ytd-comment-renderer[1]
+
+        let spinner = page.$$('#loaded-replies > ytd-comment-renderer:nth-child(1)')
+        let xpath = page.$$('[@id="loaded-replies"]/ytd-comment-renderer[1]')
+
+        console.log(spinner.length)
+        console.log(xpath.length)
         
 
-        console.log(`${i + 1} " out of " ${expander.length} "comments"`)
+
+        await console.log('spinner disappeared')
+
+
+
+        await console.log(`${i + 1} " out of " ${expander.length} "comments"`)
       }
     }
 
