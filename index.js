@@ -197,21 +197,79 @@ debugger;
       }
     }
 
+    // need more time to correctly gather up "Show more replies" buttons
+    // Add in something other than a delay time???
+    // The issue: sometimes showMoreRep can equal ZERO!
+    await delay(300)
+    
     // all currently visible "Show more replies" buttons
-    let showMoreRep = await page.$$('paper-button.yt-next-continuation')
+    let showMoreRep = await page.$$('yt-formatted-string.yt-next-continuation')
 
-    console.log('clicking "Show more replies"')
-    // iterate thru all visible "Show more replies" buttons
-    if (showMoreRep) {
-      for (let i = 0; i < showMoreRep.length; i++) {
-        // don't click so fast...
-        await showMoreRep[i].click()
-        await delay(300);
-        console.log(`${i + 1} " out of " ${showMoreRep.length} "comments"`)
+    // total amount of replies currently
+    let totRep = await page.$$('ytd-comment-renderer.ytd-comment-replies-renderer')
+
+    console.log(showMoreRep.length)
+
+    // If "Show more replies" button is visible (1 or more butttons are visible), enter while loop
+    while (showMoreRep.length > 0) {
+      // iterate thru all visible "Show more replies" buttons
+
+
+      // Problem: too many buttons to click - not enough in view
+      if (showMoreRep.length > 0) {
+        for (let i = 0; i < showMoreRep.length; i++) {
+          
+          // don't click so fast...
+          await showMoreRep[i].click()
+          //await delay(300);
+          
+          /* Execution can continue if:
+            1. (yt-formatted-string.yt-next-continuation) turns to -1 
+              - 1 less "show more replies" buttons displayed
+            2. OR (ytd-comment-renderer.ytd-comment-replies-renderer) is great than previously!
+              - More replies have been displayed now, since pressing the "show more button" than before we pressed it
+          */
+
+          // All currently visible "Show more replies" buttons - After click
+          let showMoreRepAfter = await page.$$('yt-formatted-string.yt-next-continuation')
+
+          // All currently visible replies - After click
+          let totRepAfter = await page.$$('ytd-comment-renderer.ytd-comment-replies-renderer')
+
+
+          let showMoreRepActive = true
+
+          while(showMoreRepActive){
+            showMoreRepAfter = await page.$$('yt-formatted-string.yt-next-continuation')
+            totRepAfter = await page.$$('ytd-comment-renderer.ytd-comment-replies-renderer')
+            // exit loop if one less "show more replies" button OR if we end up with more replies than before
+            if(showMoreRepAfter.length == showMoreRep.length - 1 
+              || totRep < totRepAfter){
+              showMoreRepActive = false
+            }
+
+          // Once we know that our page updated, we need to set the default criteria for next time
+          showMoreRep = await showMoreRepAfter
+          totRep = await totRepAfter
+          }
+          
+          console.log('out of while loop')
+
+          console.log(`${i + 1} " out of " ${showMoreRep.length} "comments"`)
+        }
+
+        console.log('out of loop')
+        // Get a new count of "Show more replies" buttons
+        showMoreRep = await page.$$('paper-button.yt-next-continuation')
       }
     }
 
-    await console.log('scroll completed?')
+    await console.log('comments expanded?')
+
+    // Every post: yt-formatted-string#content-text
+
+    // I don't think i need to open up all  "Read more" buttons!
+    // Youtube comment # does not match actual comments (?)
 
   } catch (error) {
     console.log("our error", error)
