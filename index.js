@@ -9,6 +9,7 @@ debugger;
     // show browser with: headless:false
     const browser = await puppeteer.launch({
       headless: false,
+      // slowMo: 250 // slow down by 250ms
     });
 
     // Create a new page in the browser - have a page object
@@ -203,7 +204,7 @@ debugger;
     // need more time to correctly gather up "Show more replies" buttons
     // Add in something other than a delay time???
     // The issue: sometimes showMoreRep can equal ZERO!
-    await delay(5000) // default: 2000
+    await delay(2000) // default: 2000
 
     console.log('clicking "show more replies" buttons')
 
@@ -286,21 +287,34 @@ debugger;
         1) 2,227 (node) - This was an old run
 
 
-        2) 2,116 (node) - 2nd delay(200) L.254
-          - 146375.203125
-        3) 2,059 (node) - 2nd delay(200)
+        Params: 2nd delay(200) L.254 - 1st default: 2000
+        2) 2,116
+        
+          Params: 2nd delay(200) - 1st default: 2000
+        3) 2,059
           - 100466.3984375
           - 111 comments
-        4) 2,156 - 2nd delay(2000)
+        
+        Params: 2nd delay(2000) - 1st default: 2000
+        4) 2,156
           113 comments
-        5) 112 commeents
-          1st delay(5000) (from 2000)
+        
+        Params: 1st delay(5000) (from 2000) L.207 - 2nd delay(2000)
+        5) 112 commments
+          
 
+        * Params: 1st delay(5000) 2nd delay(200)
         6) 113 comments - 2,208 total comments? No "show more replies" buttons?
-          1st delay(500) 2nd delay(200)
-          Comments rendered like a reddit thread?
+          - Comments rendered like a reddit thread?
         7) Same params: 111 comments - 2,136
-        8) 
+        8) Same params: 111 comments - 2,059
+
+        Params: (slowMo: 250)
+        9) 108 comments (so little??) 1,945
+          - rendered like a reddit thread
+        
+        Params: (no slowmo) 1st delay(10,000) (similar to #6-8)
+        10) 111 comments: 2,099
 
 
     */
