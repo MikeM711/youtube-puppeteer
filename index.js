@@ -203,7 +203,7 @@ debugger;
     // need more time to correctly gather up "Show more replies" buttons
     // Add in something other than a delay time???
     // The issue: sometimes showMoreRep can equal ZERO!
-    await delay(2000)
+    await delay(5000) // default: 2000
 
     console.log('clicking "show more replies" buttons')
 
@@ -251,7 +251,7 @@ debugger;
           }
 
         }
-        await delay(800) // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
+        await delay(200) // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
 
         // Check if there is another level-deep of "Show more replies"
         showMoreRep = await page.$$('yt-formatted-string.yt-next-continuation')
@@ -281,10 +281,28 @@ debugger;
       // this.pageYOffset
         - 371 (debug/node) (consistent)
           - this.pageYOffset = 26388.80078125
-        - 382 (node)
           - 371: 26388.80078125
       First We Feast: OLD: (debug) 2,192 | (node) 2,115
-        - 2,227 (node)
+        1) 2,227 (node) - This was an old run
+
+
+        2) 2,116 (node) - 2nd delay(200) L.254
+          - 146375.203125
+        3) 2,059 (node) - 2nd delay(200)
+          - 100466.3984375
+          - 111 comments
+        4) 2,156 - 2nd delay(2000)
+          113 comments
+        5) 112 commeents
+          1st delay(5000) (from 2000)
+
+        6) 113 comments - 2,208 total comments? No "show more replies" buttons?
+          1st delay(500) 2nd delay(200)
+          Comments rendered like a reddit thread?
+        7) Same params: 111 comments - 2,136
+        8) 
+
+
     */
 
     // I don't think i need to open up all  "Read more" buttons!
