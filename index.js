@@ -89,7 +89,8 @@ debugger;
     // Here's a nature video: https://www.youtube.com/watch?v=Ce-l9VpZn84
 
     // large video test: https://www.youtube.com/watch?v=th5QV1mnWXo
-    await page.goto('https://www.youtube.com/watch?v=th5QV1mnWXo');
+    // quick video test: https://www.youtube.com/watch?v=az8DrhofHeY
+    await page.goto('https://www.youtube.com/watch?v=U1_ZvIVQHuI');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
@@ -277,51 +278,51 @@ debugger;
 
     console.log("We have found: ", allComments.length , "comments")
 
-    /* Every post: yt-formatted-string#content-text
-      Politics video: OLD: (debug) 371 | 382 (node)
-      // this.pageYOffset
-        - 371 (debug/node) (consistent)
-          - this.pageYOffset = 26388.80078125
-          - 371: 26388.80078125
-      First We Feast: OLD: (debug) 2,192 | (node) 2,115
-        1) 2,227 (node) - This was an old run
+    // Put comments into an object to be rendered
 
+    /* Each comment thread: 
+      ytd-comment-renderer.ytd-comment-thread-renderer (37)
 
-        Params: 2nd delay(200) L.254 - 1st default: 2000
-        2) 2,116
-        
-          Params: 2nd delay(200) - 1st default: 2000
-        3) 2,059
-          - 100466.3984375
-          - 111 comments
-        
-        Params: 2nd delay(2000) - 1st default: 2000
-        4) 2,156
-          113 comments
-        
-        Params: 1st delay(5000) (from 2000) L.207 - 2nd delay(2000)
-        5) 112 commments
-          
+      Comment thread body (carries all information): "
+      "ytd-comment-thread-renderer.ytd-item-section-renderer 
 
-        * Params: 1st delay(5000) 2nd delay(200)
-        6) 113 comments - 2,208 total comments? No "show more replies" buttons?
-          - Comments rendered like a reddit thread?
-        7) Same params: 111 comments - 2,136
-        8) Same params: 111 comments - 2,059
+      ytd-comment-renderer.ytd-comment-thread-renderer div#body"
 
-        Params: (slowMo: 250)
-        9) 108 comments (so little??) 1,945
-          - rendered like a reddit thread
-        
-        Params: (no slowmo) 1st delay(10,000) (similar to #6-8)
-        10) 111 comments: 2,099
+      //////////////////////////////////////////////////////////
 
+      Comment thread text FULL PATH: (37)
+      "ytd-comment-thread-renderer.ytd-item-section-renderer 
+      
+      ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text"
 
+      //////////////////////////////////////////////////////////
+
+      Comment replies FULL PATH: (23)
+      "ytd-comment-thread-renderer.ytd-item-section-renderer 
+      
+      div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer"
     */
 
-    // I don't think i need to open up all  "Read more" buttons!
-    // Youtube comment # does not match actual comments (?)
+    const allOPCommentContainers = await page.$$('ytd-comment-thread-renderer.ytd-item-section-renderer')
 
+    for(let i = 0; i < allOPCommentContainers.length; i++){
+
+      // const comment = allOPCommentContainers[i].$()
+
+      // Does this post have replies?
+      const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
+
+      if(hasReplies){
+        console.log('Replies found for',(i+1))
+      }
+      if(!hasReplies){
+        console.log('No replies found for', (i+1))
+      }
+
+    }
+
+
+    
   } catch (error) {
     console.log("our error", error)
   }
