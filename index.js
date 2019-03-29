@@ -90,7 +90,7 @@ debugger;
 
     // large video test: https://www.youtube.com/watch?v=th5QV1mnWXo
     // quick video test: https://www.youtube.com/watch?v=az8DrhofHeY
-    await page.goto('https://www.youtube.com/watch?v=U1_ZvIVQHuI');
+    await page.goto('https://www.youtube.com/watch?v=az8DrhofHeY');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
@@ -307,9 +307,15 @@ debugger;
 
     for(let i = 0; i < allOPCommentContainers.length; i++){
 
-      // const comment = allOPCommentContainers[i].$()
+      // get the exact selector for tag that has the comment
+      // Note to self: await turns elementHandler from pending => usable value
+      const commentHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text')
 
-      // Does this post have replies?
+      const comment = await page.evaluate( singleComment => singleComment.innerText ,commentHandler)
+
+      console.log(comment)
+
+      // Does this post have replies? - Returns an ElementHandler
       const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
 
       if(hasReplies){
