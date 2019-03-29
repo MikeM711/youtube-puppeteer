@@ -88,7 +88,7 @@ debugger;
     // Here's a nature video: https://www.youtube.com/watch?v=Ce-l9VpZn84
 
     // large video test: https://www.youtube.com/watch?v=th5QV1mnWXo
-    await page.goto('https://www.youtube.com/watch?v=U1_ZvIVQHuI');
+    await page.goto('https://www.youtube.com/watch?v=th5QV1mnWXo');
 
     // We know this page is loaded when the below selector renders on screen
     await page.$('yt-visibility-monitor#visibility-monitor')
@@ -227,6 +227,7 @@ debugger;
         let preTotMoreRep = await page.$$('yt-formatted-string.yt-next-continuation')
 
         singleMoreRep.click()
+
         
 
         renderActive = true;
@@ -244,14 +245,13 @@ debugger;
             renderActive = false;
           }
 
-          if (afterTotMoreRep.length = preTotMoreRep.length - 1){
+          if (afterTotMoreRep.length == preTotMoreRep.length - 1){
             renderActive = false;
             // If problems, add a delay here
           }
 
         }
-        await delay(700) // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
-        // May bump this up to 800?
+        await delay(800) // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
 
         // Check if there is another level-deep of "Show more replies"
         showMoreRep = await page.$$('yt-formatted-string.yt-next-continuation')
@@ -264,6 +264,7 @@ debugger;
     }
 
     await console.log('comments expanded?')
+    // ctrl+f "show more replies" = 1
 
 
     // total amount of replies currently
@@ -271,7 +272,20 @@ debugger;
 
     const toPosts = await page.$$('ytd-comment-thread-renderer.ytd-item-section-renderer') // 159
 
-    // Every post: yt-formatted-string#content-text = 371
+    const allComments = await page.$$('yt-formatted-string#content-text')
+
+    console.log("We have found: ", allComments.length , "comments")
+
+    /* Every post: yt-formatted-string#content-text
+      Politics video: OLD: (debug) 371 | 382 (node)
+      // this.pageYOffset
+        - 371 (debug/node) (consistent)
+          - this.pageYOffset = 26388.80078125
+        - 382 (node)
+          - 371: 26388.80078125
+      First We Feast: OLD: (debug) 2,192 | (node) 2,115
+        - 2,227 (node)
+    */
 
     // I don't think i need to open up all  "Read more" buttons!
     // Youtube comment # does not match actual comments (?)
