@@ -88,9 +88,10 @@ debugger;
     // Go to a video with a lot of comments, use scroll function
     // Here's a nature video: https://www.youtube.com/watch?v=Ce-l9VpZn84
 
+    // Creator responding to comments: https://www.youtube.com/watch?v=BeSztzFtWeQ
     // large video test: https://www.youtube.com/watch?v=th5QV1mnWXo
     // quick video test: https://www.youtube.com/watch?v=az8DrhofHeY
-    await page.goto('https://www.youtube.com/watch?v=az8DrhofHeY');
+    await page.goto('https://www.youtube.com/watch?v=BeSztzFtWeQ');
 
     // We know this page is loaded when the below selector renders on screen
     await page.waitForSelector('yt-visibility-monitor#visibility-monitor')
@@ -303,8 +304,8 @@ debugger;
       div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer"
     */
 
-    // The 'Posts' that will include all content that we need
-    let Posts = []
+    // The 'CommentSection' that will include all content that we need
+    let CommentSection = []
 
     // The container for all comment threads
     const allOPCommentContainers = await page.$$('ytd-comment-thread-renderer.ytd-item-section-renderer')
@@ -344,7 +345,7 @@ debugger;
 
       
       // Avatar image
-      var avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
+      const avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
 
       // while(avatar == ""){
       //   console.log('hit')
@@ -388,7 +389,7 @@ debugger;
         var isCreator = false
       }
 
-      console.log(isCreator)
+      // console.log(isCreator)
 
       // Check if a post has replies
 
@@ -397,31 +398,85 @@ debugger;
       if(hasReplies.length > 0){
         console.log('Replies found for',(i+1))
 
+        // 'replies' array needs access to data from inside the following block scope
         var replies = []
 
+        // Relative location of "reply" data
         const replyThreadStr = 'ytd-comment-replies-renderer '
 
         for (let i = 0; i < hasReplies.length; i++) {
 
+          // reply text element handler
           const repliesHandler = await hasReplies[i].$(replyThreadStr + commentHandlerStr)
 
-          // The comment text
-          var reply = await page.evaluate(singleReply => singleReply.innerText, repliesHandler)
-          console.log(reply)
+          // The replier text
+          const reply = await page.evaluate(singleReply => singleReply.innerText, repliesHandler)
 
-          var replyInfo = {
+          // full path: ytd-comment-replies-renderer yt-img-shadow
+          // hasReplies[i]
+          // replyThreadStr in Handler
+
+          // Element handle that holds the avatar image of replier
+          const imgHandlerRep = await hasReplies[i].$(replyThreadStr + imgHandlerStr)
+
+          // Avatar image of replier
+          const avatarRep = await imgHandlerRep.$eval('img#img',imgSelector => imgSelector.src)
+
+          // Element handle that holds the name of a replier
+          const nameHandlerRep = await hasReplies[i].$(replyThreadStr + nameHandlerStr)
+
+          // Name of the replier
+          let nameRep = await page.evaluate( name => name.innerText,nameHandlerRep)
+
+          nameRep = nameRep.trim()
+
+          // Element handle that holds the date and link of replier
+          const dateLinkHandlerRep = await hasReplies[i].$(replyThreadStr + dateLinkHandlerStr)
+      
+          // Date of post - shows edit if any - for replier
+          const dateRep = await page.evaluate( singleDate => singleDate.innerText ,dateLinkHandlerRep)
+
+          // Element handle that holds the likes of replier
+          const likeHandlerRep = await hasReplies[i].$(replyThreadStr + likeHandlerStr)
+
+          // Evaluating likes of replier
+          let likesRep = await page.evaluate( likeAmt => likeAmt.innerText ,likeHandlerRep)
+
+          likesRep = likesRep.trim()
+
+          // link to particular replier
+          const linkRep = await page.evaluate( link => link.href ,dateLinkHandlerRep)
+
+          // check if original thread creator made this reply
+
+          const isCreatorHandlerRep = await hasReplies[i].$(replyThreadStr + isCreatorHandlerStr)
+
+          if(isCreatorHandlerRep){
+            var isCreatorRep = true
+          } else {
+            var isCreatorRep = false
+          }
+
+          const replyInfo = {
             id: i,
-            reply: reply
+            avatarRep: avatarRep,
+            nameRep: nameRep,
+            dateRep: dateRep,
+            reply: reply,
+            likesRep: likesRep,
+            linkRep: linkRep,
+            isCreatorRep: isCreatorRep,
           }
 
           replies.push(replyInfo)
         }
+
       } else {
         console.log('No replies found for', (i+1))
         var replies = false
       }
 
-      const Post = {
+      const thread = {
         id: i,
         avatar: avatar,
         name: name,
@@ -433,10 +488,13 @@ debugger;
         replies: replies
       }
 
-      Posts.push(Post)
+      CommentSection.push(thread)
 
     }
 
+    const myJSON = JSON.stringify(CommentSection,null,2);
+
+    console.log(myJSON)
     console.log('end of loop')
     
   } catch (error) {
