@@ -303,6 +303,10 @@ debugger;
       div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer"
     */
 
+    // The 'Posts' that will include all content that we need
+    let Posts = []
+
+    // The first post of all comment threads
     const allOPCommentContainers = await page.$$('ytd-comment-thread-renderer.ytd-item-section-renderer')
 
     for(let i = 0; i < allOPCommentContainers.length; i++){
@@ -311,9 +315,44 @@ debugger;
       // Note to self: await turns elementHandler from pending => usable value
       const commentHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text')
 
+      // The comment text
       const comment = await page.evaluate( singleComment => singleComment.innerText ,commentHandler)
 
-      console.log(comment)
+      const imgHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer yt-img-shadow')
+
+      // Avatar image
+      const avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
+
+      const nameHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer a#author-text span.ytd-comment-renderer')
+
+      // Name of original thread creator
+      let name = await page.evaluate( name => name.innerText ,nameHandler)
+
+      name = name.trim()
+
+      const dateHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main div#header div#header-author yt-formatted-string.published-time-text a.yt-simple-endpoint')
+      
+      // Date of post - shows edit if any
+      const date = await page.evaluate( singleDate => singleDate.innerText ,dateHandler)
+
+      const likeHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main span#vote-count-left')
+
+      let likes = await page.evaluate( likeAmt => likeAmt.innerText ,likeHandler)
+
+      likes = likes.trim()
+      
+      console.log(likes)
+
+      const Post = {
+        id: i,
+        avatar: avatar,
+        name: name,
+        date: date,
+        comment: comment,
+        likes: likes,
+      }
+
+      Posts.push(Post)
 
       // Does this post have replies? - Returns an ElementHandler
       const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
@@ -327,7 +366,7 @@ debugger;
 
     }
 
-
+    console.log('end of loop')
     
   } catch (error) {
     console.log("our error", error)

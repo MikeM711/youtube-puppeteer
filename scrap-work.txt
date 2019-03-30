@@ -1,0 +1,30 @@
+
+CommentObj = {[
+  {
+    id:
+    Avatar:
+    Name:
+    Date:
+    Comment:
+    Likes:
+    Context:
+    ChannelOwner: (t/f)
+    Replies: (false or null if none)
+  },
+
+  {
+    Avatar:
+    Name:
+    Date:
+    Comment:
+    Likes:
+    Replies: {
+      Avatar:
+      Name:
+      Date:
+      Comment:
+      Likes:
+    }
+  },
+
+]}
