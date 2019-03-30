@@ -7,7 +7,7 @@ CommentObj = {[
     Date:
     Comment:
     Likes:
-    Context:
+    link:
     ChannelOwner: (t/f)
     Replies: (false or null if none)
   },

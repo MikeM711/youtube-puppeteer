@@ -311,37 +311,88 @@ debugger;
 
     for(let i = 0; i < allOPCommentContainers.length; i++){
 
+      // space is required
+      const commentThreadStr = 'ytd-comment-renderer.ytd-comment-thread-renderer '
+
+      const commentHandlerStr = 'div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text'
+
+      const imgHandlerStr = 'yt-img-shadow'
+
+      const nameHandlerStr = 'a#author-text span.ytd-comment-renderer'
+
+      const dateLinkHandlerStr = 'div#body div#main div#header div#header-author yt-formatted-string.published-time-text a.yt-simple-endpoint'
+
+      const likeHandlerStr = 'div#body div#main span#vote-count-left'
+
+      const isCreatorHandlerStr = 'div#body div#main div#header div#header-author span#author-comment-badge ytd-author-comment-badge-renderer'
+
       // get the exact selector for tag that has the comment
       // Note to self: await turns elementHandler from pending => usable value
-      const commentHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text')
+      const commentHandler = await allOPCommentContainers[i].$(commentThreadStr + commentHandlerStr)
 
       // The comment text
       const comment = await page.evaluate( singleComment => singleComment.innerText ,commentHandler)
 
-      const imgHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer yt-img-shadow')
+      const imgHandler = await allOPCommentContainers[i].$(commentThreadStr + imgHandlerStr)
 
       // Avatar image
       const avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
 
-      const nameHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer a#author-text span.ytd-comment-renderer')
+      const nameHandler = await allOPCommentContainers[i].$(commentThreadStr + nameHandlerStr)
 
-      // Name of original thread creator
-      let name = await page.evaluate( name => name.innerText ,nameHandler)
+
+      let name = await page.evaluate( name => name.innerText,nameHandler)
 
       name = name.trim()
 
-      const dateHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main div#header div#header-author yt-formatted-string.published-time-text a.yt-simple-endpoint')
+      const dateLinkHandler = await allOPCommentContainers[i].$(commentThreadStr + dateLinkHandlerStr)
       
       // Date of post - shows edit if any
-      const date = await page.evaluate( singleDate => singleDate.innerText ,dateHandler)
+      const date = await page.evaluate( singleDate => singleDate.innerText ,dateLinkHandler)
 
-      const likeHandler = await allOPCommentContainers[i].$('ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main span#vote-count-left')
+      const likeHandler = await allOPCommentContainers[i].$(commentThreadStr + likeHandlerStr)
 
       let likes = await page.evaluate( likeAmt => likeAmt.innerText ,likeHandler)
 
       likes = likes.trim()
+
+      // link to particular comment
+      const link = await page.evaluate( link => link.href ,dateLinkHandler) 
+      // check if original thread creator made this particular post
+
+      const isCreatorHandler = await allOPCommentContainers[i].$(commentThreadStr + isCreatorHandlerStr)
+
+      if(isCreatorHandler){
+        var isCreator = true
+      } else {
+        var isCreator = false
+      }
+
+      console.log(isCreator)
+
       
-      console.log(likes)
+
+      // Does this post have replies? - Returns an ElementHandler
+      const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
+
+      if(hasReplies){
+        console.log('Replies found for',(i+1))
+
+        // const repliesHandlerStr = 'ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text'
+
+        // const repliesHandler = await allOPCommentContainers[i].$(repliesHandlerStr)
+
+        // // The comment text
+        // const replies = await page.evaluate( singleReply => singleReply.innerText ,repliesHandler)
+
+        var replies = true
+
+
+      }
+      if(!hasReplies){
+        console.log('No replies found for', (i+1))
+        var replies = false
+      }
 
       const Post = {
         id: i,
@@ -350,19 +401,12 @@ debugger;
         date: date,
         comment: comment,
         likes: likes,
+        link: link,
+        isCreator: isCreator,
+        replies: replies
       }
 
       Posts.push(Post)
-
-      // Does this post have replies? - Returns an ElementHandler
-      const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
-
-      if(hasReplies){
-        console.log('Replies found for',(i+1))
-      }
-      if(!hasReplies){
-        console.log('No replies found for', (i+1))
-      }
 
     }
 
