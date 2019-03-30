@@ -93,20 +93,20 @@ debugger;
     await page.goto('https://www.youtube.com/watch?v=az8DrhofHeY');
 
     // We know this page is loaded when the below selector renders on screen
-    await page.$('yt-visibility-monitor#visibility-monitor')
+    await page.waitForSelector('yt-visibility-monitor#visibility-monitor')
 
     await console.log('video is in view!')
     // yt-visibility-monitor id="visibility-monitor"
 
     // a delay function to let the video render, so we can click it to pause it (not needed during headless)
-    function delay(time) {
-      return new Promise(function (resolve) {
-        setTimeout(resolve, time)
-      });
-    }
+    // function delay(time) {
+    //   return new Promise(function (resolve) {
+    //     setTimeout(resolve, time)
+    //   });
+    // }
 
     // time to let the video render
-    await delay(1500);
+    //await delay(1500);
 
     // Get the video element
     const videoBtn = await page.$('video.video-stream')
@@ -194,7 +194,7 @@ debugger;
         }
 
         // replies have been rendered out, execution will continue
-        await delay(100) // some "breathing time" for execution after render
+        await page.waitFor(100); // some "breathing time" for execution after render
         
         await console.log('spinner disappeared')
 
@@ -205,7 +205,7 @@ debugger;
     // need more time to correctly gather up "Show more replies" buttons
     // Add in something other than a delay time???
     // The issue: sometimes showMoreRep can equal ZERO!
-    await delay(2000) // default: 2000
+    await page.waitFor(2000);
 
     console.log('clicking "show more replies" buttons')
 
@@ -253,7 +253,7 @@ debugger;
           }
 
         }
-        await delay(200) // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
+        await page.waitFor(200); // Even though everything is rendered properly at this point, this gives some "breathing room", before next execution
 
         // Check if there is another level-deep of "Show more replies"
         showMoreRep = await page.$$('yt-formatted-string.yt-next-continuation')
@@ -306,13 +306,19 @@ debugger;
     // The 'Posts' that will include all content that we need
     let Posts = []
 
-    // The first post of all comment threads
+    // The container for all comment threads
     const allOPCommentContainers = await page.$$('ytd-comment-thread-renderer.ytd-item-section-renderer')
+
+
+    // THE SRC IS HIDDEN FOR SOME USERS, AND THERE'S NOTHING I CAN DO ABOUT IT
 
     for(let i = 0; i < allOPCommentContainers.length; i++){
 
+      // The selector for the first comment of every thread
       // space is required
       const commentThreadStr = 'ytd-comment-renderer.ytd-comment-thread-renderer '
+
+      // The relative location of "Post" data
 
       const commentHandlerStr = 'div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text'
 
@@ -326,38 +332,52 @@ debugger;
 
       const isCreatorHandlerStr = 'div#body div#main div#header div#header-author span#author-comment-badge ytd-author-comment-badge-renderer'
 
-      // get the exact selector for tag that has the comment
+      // Element handle that holds the comment
       // Note to self: await turns elementHandler from pending => usable value
       const commentHandler = await allOPCommentContainers[i].$(commentThreadStr + commentHandlerStr)
 
       // The comment text
       const comment = await page.evaluate( singleComment => singleComment.innerText ,commentHandler)
 
+      // Element handle that holds the avatar image
       const imgHandler = await allOPCommentContainers[i].$(commentThreadStr + imgHandlerStr)
 
+      
       // Avatar image
-      const avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
+      var avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
 
+      // while(avatar == ""){
+      //   console.log('hit')
+      //   avatar = await imgHandler.$eval('img#img',imgSelector => imgSelector.src)
+
+      // }
+     
+
+      // Element handle that holds the name of initial commenter
       const nameHandler = await allOPCommentContainers[i].$(commentThreadStr + nameHandlerStr)
 
-
+      // Name of initial commenter
       let name = await page.evaluate( name => name.innerText,nameHandler)
 
       name = name.trim()
 
+      // Element handle that holds the date and link of comment
       const dateLinkHandler = await allOPCommentContainers[i].$(commentThreadStr + dateLinkHandlerStr)
       
       // Date of post - shows edit if any
       const date = await page.evaluate( singleDate => singleDate.innerText ,dateLinkHandler)
 
+      // Element handle that holds the likes
       const likeHandler = await allOPCommentContainers[i].$(commentThreadStr + likeHandlerStr)
 
+      // Evaluating likes
       let likes = await page.evaluate( likeAmt => likeAmt.innerText ,likeHandler)
 
       likes = likes.trim()
 
       // link to particular comment
       const link = await page.evaluate( link => link.href ,dateLinkHandler) 
+      
       // check if original thread creator made this particular post
 
       const isCreatorHandler = await allOPCommentContainers[i].$(commentThreadStr + isCreatorHandlerStr)
@@ -370,26 +390,33 @@ debugger;
 
       console.log(isCreator)
 
-      
+      // Check if a post has replies
 
-      // Does this post have replies? - Returns an ElementHandler
-      const hasReplies = await allOPCommentContainers[i].$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
+      const hasReplies = await allOPCommentContainers[i].$$('div#replies ytd-comment-replies-renderer ytd-expander div#content div div#loaded-replies ytd-comment-renderer')
 
-      if(hasReplies){
+      if(hasReplies.length > 0){
         console.log('Replies found for',(i+1))
 
-        // const repliesHandlerStr = 'ytd-comment-renderer.ytd-comment-thread-renderer div#body div#main ytd-expander#expander div#content yt-formatted-string#content-text'
+        var replies = []
 
-        // const repliesHandler = await allOPCommentContainers[i].$(repliesHandlerStr)
+        const replyThreadStr = 'ytd-comment-replies-renderer '
 
-        // // The comment text
-        // const replies = await page.evaluate( singleReply => singleReply.innerText ,repliesHandler)
+        for (let i = 0; i < hasReplies.length; i++) {
 
-        var replies = true
+          const repliesHandler = await hasReplies[i].$(replyThreadStr + commentHandlerStr)
 
+          // The comment text
+          var reply = await page.evaluate(singleReply => singleReply.innerText, repliesHandler)
+          console.log(reply)
 
-      }
-      if(!hasReplies){
+          var replyInfo = {
+            id: i,
+            reply: reply
+          }
+
+          replies.push(replyInfo)
+        }
+      } else {
         console.log('No replies found for', (i+1))
         var replies = false
       }
